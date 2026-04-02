@@ -1,0 +1,25 @@
+# Secrets y entorno local
+.env
+.env.*
+!.env.example
+
+# Jelou (runner local)
+.jelou/
+
+# Dependencias npm usadas por Deno (deno.json: nodeModulesDir "auto")
+node_modules/
+
+# Caché / artefactos locales de Deno (si algún día se usa --vendor u output)
+vendor/
+
+# Cobertura y reportes
+coverage/
+*.lcov
+
+# Logs
+*.log
+npm-debug.log*
+
+# SO
+.DS_Store
+Thumbs.db

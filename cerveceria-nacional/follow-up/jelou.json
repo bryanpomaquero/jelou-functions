@@ -1,0 +1,6 @@
+{
+  "$schema": "https://jelou.ai/schemas/jelou.json",
+  "function": "follow-up-cerveza-mas",
+  "id": "func_01kn7jtzmeeccvvqryjbddm997",
+  "entrypoint": "index.ts"
+}

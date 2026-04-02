@@ -1,0 +1,8 @@
+{
+  "nodeModulesDir": "auto",
+  "imports": {
+    "@jelou/functions": "jsr:@jelou/functions",
+    "got": "npm:got@^14.6.6",
+    "p-limit": "npm:p-limit@^4.0.0"
+  }
+}
