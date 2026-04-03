@@ -2,7 +2,10 @@
   "version": "5",
   "specifiers": {
     "jsr:@jelou/functions@*": "0.6.3",
+    "jsr:@std/assert@*": "1.0.0",
+    "jsr:@std/assert@1.0.0": "1.0.0",
     "jsr:@std/crypto@1": "1.0.5",
+    "jsr:@std/internal@^1.0.1": "1.0.12",
     "npm:@modelcontextprotocol/sdk@1": "1.29.0_zod@3.25.76_hono@4.12.10_ajv@8.18.0_express@5.2.1",
     "npm:got@^14.6.6": "14.6.6",
     "npm:hono@4": "4.12.10",
@@ -21,8 +24,17 @@
         "npm:zod-to-json-schema"
       ]
     },
+    "@std/assert@1.0.0": {
+      "integrity": "0e4f6d873f7f35e2a1e6194ceee39686c996b9e5d134948e644d35d4c4df2008",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
     "@std/crypto@1.0.5": {
       "integrity": "0dcfbb319fe0bba1bd3af904ceb4f948cde1b92979ec1614528380ed308a3b40"
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
     }
   },
   "npm": {
@@ -659,6 +671,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@jelou/functions@*",
+      "jsr:@std/assert@1.0.0",
       "npm:got@^14.6.6",
       "npm:p-limit@4"
     ]

@@ -3,6 +3,10 @@
   "imports": {
     "@jelou/functions": "jsr:@jelou/functions",
     "got": "npm:got@^14.6.6",
-    "p-limit": "npm:p-limit@^4.0.0"
+    "p-limit": "npm:p-limit@^4.0.0",
+    "jsr:@std/assert@1": "jsr:@std/assert@1.0.0"
+  },
+  "tasks": {
+    "test": "deno test -A"
   }
 }
