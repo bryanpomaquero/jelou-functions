@@ -2,8 +2,8 @@ import { define, z } from "@jelou/functions";
 import got from "got";
 import pLimit from "p-limit";
 
-const MS_24H = 24 * 60 * 60 * 1000;
-const MS_48H = 48 * 60 * 60 * 1000;
+const MS_5M = 5 * 60 * 1000; // 5 minutos
+const MS_10M = 10 * 60 * 1000; // 10 minutos
 
 const syncResultSchema = z.object({
   id: z.string(),
@@ -34,79 +34,71 @@ function resolveHsmStage(
   if (!created) return null;
 
   const elapsed = now.getTime() - created.getTime();
-  console.log("elapsed", { elapsed });
-  console.log("counter", { counter });
-  if (counter === 0 ) return "first";
-  if (counter === 1 && elapsed >= MS_48H) return "second";
+  if (counter === 0 && elapsed >= MS_5M) return "first";
+  if (counter === 1 && elapsed >= MS_10M) return "second";
   return null;
 }
 
 function buildHsmPayload(
   item: Record<string, unknown>,
   ctx: { env: { get: (k: string) => string | undefined } },
-  stage: "first" | "second",
 ) {
-  const elementName =
-    stage === "second"
-      ? (ctx.env.get("HSM_ELEMENT_NAME_SECOND") ??
-        ctx.env.get("HSM_ELEMENT_NAME") ??
-        "mi_plantilla")
-      : (ctx.env.get("HSM_ELEMENT_NAME") ?? "mi_plantilla");
+  const elementName = ctx.env.get("CERVECERIA_NACIONAL_HSM_ELEMENT_NAME") ?? "";
 
-  const language = ctx.env.get("HSM_LANGUAGE") ?? "es";
-  const skillConfirm = ctx.env.get("HSM_SKILL_ID_CONFIRM") ?? "1";
-  const skillCancel = ctx.env.get("HSM_SKILL_ID_CANCEL") ?? "2";
-
-  const nameStore = String(item.nameStore ?? "");
-  const recordId = String(item.id ?? "");
   const userId = String(item.userId ?? "");
 
   return {
     elementName,
-    language,
+    language: "es",
     type: "text" as const,
-    parameters: [nameStore, recordId],
+    parameters: [],
     destinations: [userId],
     buttonParameters: [
       {
         type: "QUICK_REPLY" as const,
         payload: {
           type: "edge" as const,
-          action: "Confirmar",
-          skillId: skillConfirm,
+          action: "Sí, todo bien tío.",
+          skillId: 24593,
         },
       },
       {
         type: "QUICK_REPLY" as const,
         payload: {
           type: "edge" as const,
-          action: "Cancelar",
-          skillId: skillCancel,
+          action: "No pude, tío.",
+          skillId: 24593,
         },
       },
     ],
   };
 }
 
+export { parseCreated, resolveHsmStage, buildHsmPayload };
+
 export default define({
   name: "encuesta-seguimiento-records",
   description:
     "HSM 1 tras 24h (counter 0→1), HSM 2 tras 48h (counter 1→2); actualiza counter vía PATCH",
   input: z.object({}),
+  config: {
+    cron: [
+      { expression: "*/5 * * * *", timezone: "America/Guayaquil" }, // every 5 minutes
+    ],
+  },
   output: z.object({
     items: z.array(z.record(z.unknown())),
     sync: z.array(syncResultSchema),
   }),
   handler: async (_input, ctx) => {
     const recordsBaseUrl =
-      ctx.env.get("ENCUESTA_COLLECTION_RECORDS_URL") ?? "";
+      "https://encuesta-de-seguimiento-rt8u44.jelou.cloud/api/collections/pbc_882207933/records";
     const apiKey = ctx.env.get("ENCUESTA_SEGUIMIENTO_API_KEY") ?? "";
 
     const hsmApiBaseUrl = ctx.env.get("JELOU_WHATSAPP_API_BASE_URL") ?? "";
     const botId = ctx.env.get("CERVECERIA_NACIONAL_BOT_ID") ?? "";
     const clientId = ctx.env.get("CERVECERIA_NACIONAL_CLIENT_ID") ?? "";
     const clientSecret = ctx.env.get("CERVECERIA_NACIONAL_CLIENT_SECRET") ?? "";
-
 
     const params = new URLSearchParams({
       page: "1",
@@ -152,7 +144,6 @@ export default define({
           const userId = String(item.userId ?? "");
 
           const stage = resolveHsmStage(item, now);
-          ctx.log("stage", { stage });
           if (!stage) {
             return {
               id,
@@ -172,35 +163,36 @@ export default define({
           }
 
           try {
-            const body = buildHsmPayload(item, ctx, stage);
+            const body = buildHsmPayload(item, ctx);
+            ctx.log("HSM payload", { body });
             const nextCounter = stage === "first" ? 1 : 2;
 
-            // const out = await got.post(hsmUrl, {
-            //   username: clientId,
-            //   password: clientSecret,
-            //   json: body,
-            //   headers: {
-            //     Accept: "application/json",
-            //   },
-            //   throwHttpErrors: false,
-            // });
+            const out = await got.post(hsmUrl, {
+              username: clientId,
+              password: clientSecret,
+              json: body,
+              headers: {
+                Accept: "application/json",
+              },
+              throwHttpErrors: false,
+            });
 
-            // if (!out.ok) {
-            //   const text = String(out.body);
-            //   ctx.log("Jelou HSM error", {
-            //     id,
-            //     stage,
-            //     status: out.statusCode,
-            //     body: text.slice(0, 300),
-            //   });
-            //   return {
-            //     id,
-            //     ok: false,
-            //     status: out.statusCode,
-            //     error: text.slice(0, 500),
-            //     stage,
-            //   };
-            // }
+            if (!out.ok) {
+              const text = String(out.body);
+              ctx.log("Jelou HSM error", {
+                id,
+                stage,
+                status: out.statusCode,
+                body: text.slice(0, 300),
+              });
+              return {
+                id,
+                ok: false,
+                status: out.statusCode,
+                error: text.slice(0, 500),
+                stage,
+              };
+            }
 
             const patchUrl = `${baseRecords}/${encodeURIComponent(id)}`;
             const patched = await got.patch(patchUrl, {
