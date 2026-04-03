@@ -52,6 +52,11 @@ function buildHsmPayload(
     language: "es",
     type: "text" as const,
     parameters: [],
+    actions: {
+      setMemoryParams: {
+        datum_id: String(item.id ?? ""),
+      },
+    },
     destinations: [userId],
     buttonParameters: [
       {
