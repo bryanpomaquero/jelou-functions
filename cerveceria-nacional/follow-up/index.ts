@@ -72,7 +72,7 @@ function buildHsmPayload(
         payload: {
           type: "edge" as const,
           action: "No pude, tío.",
-          skillId: 24593,
+          skillId: 24606,
         },
       },
     ],
