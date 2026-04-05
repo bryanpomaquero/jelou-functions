@@ -1,0 +1,6 @@
+{
+  "$schema": "https://jelou.ai/schemas/jelou.json",
+  "function": "una-cerveceza-mas-locations",
+  "id": "func_01kne0dcsaedssaer77bssb1q5",
+  "entrypoint": "index.ts"
+}

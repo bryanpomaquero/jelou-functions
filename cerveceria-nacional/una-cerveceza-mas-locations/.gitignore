@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+
+# Jelou (runner local)
+.jelou/
+
+# Dependencies npm usadas por Deno (deno.json: nodeModulesDir "auto")
+node_modules/
+
+# Caché / artefactos locales de Deno (si algún día se usa --vendor u output)
+vendor/
